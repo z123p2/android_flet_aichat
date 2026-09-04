@@ -1,4 +1,4 @@
-﻿[project]
+[project]
 name = "aichat"
 version = "1.0.0"
 description = "AI Chat - мобильный клиент OpenRouter на Flet с PIN-аутентификацией и Telegram-уведомлениями"

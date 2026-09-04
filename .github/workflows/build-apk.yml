@@ -45,10 +45,11 @@ jobs:
           fi
 
       # Сборка APK: Flet CLI сам установит JDK 17 и Android SDK при первом запуске
+      # В flet 0.86 флаг --project-name заменен на --project
       - name: Build APK
         run: |
           flet build apk --yes --verbose \
-            --project-name "AIChat" \
+            --project "AIChat" \
             --org "com.example" \
             --bundle-id "com.example.aichat" \
             --build-version "1.0.0" \

@@ -26,7 +26,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flet==0.86.5 flet-runtime flet-builder
+          # flet-cli содержит команду flet build (в flet 0.86 пакеты
+          # flet-runtime и flet-builder из подсказок задания не используются -
+          # flet-builder не существует на PyPI, flet-runtime устарел)
+          pip install flet==0.86.5 flet-cli==0.86.5
 
       # Токен Telegram-бота из GitHub Secrets вшивается в APK отдельным модулем
       # и не попадает в исходный код репозитория

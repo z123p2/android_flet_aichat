@@ -15,8 +15,9 @@ path = "src"
 module = "main"
 
 [tool.flet.android]
-# Минимальная версия Android по заданию - SDK 21 (Android 5.0)
-min_sdk_version = 21
+# Минимальная версия Android: задание рекомендует SDK 21, но Flutter 3.44
+# требует минимум SDK 23 (Android 6.0) - используем 23
+min_sdk_version = 23
 target_sdk_version = 35
 
 # Права доступа по заданию: работа с API, мониторинг сети, экспорт истории чата

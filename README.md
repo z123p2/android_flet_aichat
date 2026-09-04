@@ -21,8 +21,8 @@ required.
 
 1. Open the [Actions](../../actions) tab of this repository
 2. Pick the latest **Build APK** run and download the `aichat-apk` artifact
-3. Unzip it and install the APK on an Android device (Android 6.0 / SDK 23+,
-   the minimum supported by Flutter)
+3. Unzip it and install the APK on an Android device (Android 7.0 / SDK 24+,
+   the minimum supported by Flutter and its plugins)
 4. Allow installing from unknown sources on first launch
 
 ## Setup before building

@@ -1,0 +1,31 @@
+[project]
+name = "aichat"
+version = "1.0.0"
+description = "AI Chat - мобильный клиент OpenRouter на Flet с PIN-аутентификацией и Telegram-уведомлениями"
+requires-python = ">=3.12,<3.13"
+
+[tool.flet]
+# org формирует bundle id вместе с именем проекта: com.example.aichat
+org = "com.example"
+product = "AIChat"
+
+[tool.flet.app]
+# Точка входа приложения: src/main.py
+path = "src"
+module = "main"
+
+[tool.flet.android]
+# Минимальная версия Android по заданию - SDK 21 (Android 5.0)
+min_sdk_version = 21
+target_sdk_version = 35
+
+# Права доступа по заданию: работа с API, мониторинг сети, экспорт истории чата
+[tool.flet.android.permission]
+"android.permission.INTERNET" = true
+"android.permission.ACCESS_NETWORK_STATE" = true
+"android.permission.WRITE_EXTERNAL_STORAGE" = true
+
+[tool.flet.android.gradle_properties]
+# GitHub Actions runner имеет около 7 GB RAM - снижаем память Gradle
+"org.gradle.jvmargs" = "-Xmx4G -XX:MaxMetaspaceSize=2G -XX:+HeapDumpOnOutOfMemoryError"
+"android.useAndroidX" = "true"

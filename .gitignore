@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.venv/
+
+# Секреты - токен вшивается при сборке из GitHub Secrets
+.env
+src/telegram_token.py
+
+# Данные приложения
+*.db
+exports/
+logs/
+build/
+
+# Flet/Flutter
+.flet/
+.dart_tool/
+.flutter*
+
+# IDE
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,60 @@
+name: Build APK
+
+# Сборка APK при push и вручную через Run workflow
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+env:
+  PYTHONUTF8: 1
+  FLET_CLI_NO_RICH_OUTPUT: 1
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flet==0.86.5 flet-runtime flet-builder
+
+      # Токен Telegram-бота из GitHub Secrets вшивается в APK отдельным модулем
+      # и не попадает в исходный код репозитория
+      - name: Inject Telegram bot token
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+            echo "TELEGRAM_BOT_TOKEN secret is not set - building without notifications"
+            printf 'TELEGRAM_BOT_TOKEN = ""\n' > src/telegram_token.py
+          else
+            printf 'TELEGRAM_BOT_TOKEN = "%s"\n' "$TELEGRAM_BOT_TOKEN" > src/telegram_token.py
+          fi
+
+      # Сборка APK: Flet CLI сам установит JDK 17 и Android SDK при первом запуске
+      - name: Build APK
+        run: |
+          flet build apk --yes --verbose \
+            --project-name "AIChat" \
+            --org "com.example" \
+            --bundle-id "com.example.aichat" \
+            --build-version "1.0.0" \
+            --build-number 1
+
+      # Загружаем APK как артефакт сборки
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aichat-apk
+          path: build/apk/
+          if-no-files-found: error

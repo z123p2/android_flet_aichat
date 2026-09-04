@@ -1,0 +1,94 @@
+# AIChat
+
+[English](README.md) | Русский
+
+Чат-приложение для OpenRouter.ai, написанное на Python (Flet).
+Собирается в APK для Android прямо на GitHub Actions - без локальной установки
+Android SDK, JDK и macOS.
+
+## Возможности
+
+- Чат с 200+ моделями OpenRouter (включая бесплатные `:free` модели)
+- Вход по 4-значному PIN: при первом запуске вводится ключ OpenRouter,
+  проверяется баланс, генерируется PIN. Ключ и хэш PIN хранятся в SQLite
+- Кнопка "Сбросить ключ" на экране входа
+- Автоматическое Telegram-уведомление при низком балансе (анти-спам 24 часа)
+- Сохранение истории чата в SQLite, экспорт в JSON
+- Аналитика: токены, сообщений в минуту, статистика по моделям
+
+## Установка APK
+
+1. Откройте вкладку [Actions](../../actions) репозитория
+2. Выберите последний запуск **Build APK** и скачайте артефакт `aichat-apk`
+3. Распакуйте zip и установите APK на Android-устройство
+   (Android 5.0 / SDK 21 и выше)
+4. При первом запуске разрешите установку из неизвестных источников
+
+## Настройка перед сборкой
+
+APK собирается с токеном Telegram-бота. Токен хранится в GitHub Secrets и
+не попадает в исходный код:
+
+1. Создайте бота в [@BotFather](https://t.me/BotFather) через `/newbot` и
+   скопируйте токен
+2. В репозитории: Settings - Secrets and variables - Actions - New repository
+   secret
+3. Имя секрета: `TELEGRAM_BOT_TOKEN`, значение - токен бота
+4. Запустите workflow вручную (Actions - Build APK - Run workflow) или сделайте
+   push
+
+Для получения уведомлений отправьте боту `/start`.
+
+Проверка баланса требует ключа OpenRouter. PIN генерируется только при
+положительном балансе - это прямое требование задания. Без баланса чат
+работает на бесплатных моделях, но приложение покажет сообщение об
+отрицательном балансе.
+
+## Структура проекта
+
+```
+├── src/
+│   ├── api/
+│   │   └── openrouter.py      - клиент OpenRouter API + проверка ключа
+│   ├── ui/
+│   │   ├── components.py      - MessageBubble, ModelSelector, LoginView (PIN)
+│   │   └── styles.py          - стили приложения
+│   ├── utils/
+│   │   ├── analytics.py       - статистика использования
+│   │   ├── cache.py           - SQLite: история чата + таблица auth (PIN, ключ)
+│   │   ├── logger.py          - логирование в файл
+│   │   ├── monitor.py         - мониторинг ресурсов (заглушка на Android)
+│   │   ├── notifications.py   - Telegram-уведомления о низком балансе
+│   │   └── paths.py           - кроссплатформенные пути приложения
+│   ├── assets/icon.png        - иконка приложения
+│   └── main.py                - точка входа, окно входа, чат
+├── .github/workflows/
+│   └── build-apk.yml          - GitHub Actions: flet build apk
+├── pyproject.toml             - конфигурация сборки Flet (права, версия)
+├── requirements.txt           - зависимости Python
+└── README.md
+```
+
+## Как работает мобильная адаптация
+
+- Все пути (SQLite, логи, экспорт) вычисляются от каталога данных приложения,
+  а не от рабочей директории - на Android рабочая директория недоступна для
+  записи
+- `os.startfile` вызывается только на Windows
+- Telegram-токен зашивается в APK на этапе сборки из GitHub Secrets;
+  chat_id определяется автоматически через Telegram Bot API (`getUpdates`)
+
+## Сборка локально (опционально)
+
+```bash
+pip install flet==0.86.5
+flet build apk --project-name "AIChat" --org "com.example" \
+  --bundle-id "com.example.aichat"
+```
+
+Flet CLI сам установит JDK 17 и Android SDK при первом запуске.
+Переменная окружения `TELEGRAM_BOT_TOKEN` должна быть задана перед сборкой.
+
+## Лицензия
+
+[MIT](LICENSE)

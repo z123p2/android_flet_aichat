@@ -654,7 +654,7 @@ class ChatApp:
         )
 
         # Создание колонки выбора модели:
-        # строка 1 - поиск (3/4) + баланс (1/4), строка 2 - селектор моделей
+        # строка 1 - поиск (1/2) + баланс (1/2), строка 2 - селектор моделей
         model_selection = ft.Column(
             controls=[                            # Размещение элементов выбора модели
                 ft.Row(
@@ -679,8 +679,9 @@ class ChatApp:
             **AppStyles.MAIN_COLUMN               # Применение стилей к главной колонке
         )
 
-        # Добавление основной колонки на страницу
-        page.add(self.main_column)
+        # Добавление основной колонки через SafeArea: автоматически
+        # отступает от системных иконок и выреза экрана на мобильных
+        page.add(ft.SafeArea(content=self.main_column))
 
         # Обновляем баланс и проверяем низкий баланс (задание 1)
         self.update_balance()
@@ -721,8 +722,9 @@ def main(page: ft.Page):
         setattr(page, key, value)
     AppStyles.set_window_size(page)
 
-    # Показываем окно входа
-    page.add(LoginView(cache, handle_login))
+    # Показываем окно входа через SafeArea: автоматический отступ
+    # от системных иконок и выреза экрана на мобильных
+    page.add(ft.SafeArea(content=LoginView(cache, handle_login)))
 
 
 # Точка входа в приложение

@@ -39,10 +39,10 @@ Secrets and never appears in the source code:
 
 To receive notifications, send `/start` to your bot.
 
-Balance checks require an OpenRouter key. PIN generation only happens with
-a positive balance - this is a stated requirement of the assignment. Without
-a balance the chat still works on free models, but the app shows a message
-about the negative balance.
+Balance checks require an OpenRouter key. A PIN is generated for any valid
+key. With a zero or negative balance the login is allowed with a warning -
+the chat works on free `:free` models, and the low balance is tracked by
+Telegram notifications.
 
 ## Proxy
 

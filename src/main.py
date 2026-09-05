@@ -11,7 +11,7 @@ from utils.cache import ChatCache                  # Модуль для кэш�
 from utils.logger import AppLogger                 # Модуль для логирования работы приложения
 from utils.analytics import Analytics              # Модуль для сбора и анализа статистики использования
 from utils.monitor import PerformanceMonitor       # Модуль для мониторинга производительности
-from utils.notifications import TelegramNotifier   # Модуль для Telegram-уведомлений о низком балансе
+from utils.notifications import TelegramNotifier, generate_binding_code  # Telegram-уведомления о низком балансе
 from utils.paths import get_exports_dir            # Кроссплатформенные пути для экспорта
 import asyncio                                     # Библиотека для асинхронного программирования
 import time                                        # Библиотека для работы с временными метками
@@ -136,6 +136,24 @@ class ChatApp:
         except ValueError:
             # Баланс в неожиданном формате (например 'Ошибка') - пропускаем
             self.logger.warning(f"Cannot parse balance for notification: {balance}")
+
+    def _notifications_status_text(self) -> str:
+        """
+        Формирование стартового статуса для диалога уведомлений.
+
+        Returns:
+            str: Описание текущего состояния привязки и канала
+        """
+        if not self.notifier.is_configured:
+            return "Уведомления не настроены: нет канала отправки"
+
+        chat_id = self.notifier.get_chat_id()
+        mode_names = {"bridge": "мост", "direct": "прямой API"}
+        mode_name = mode_names.get(self.notifier.mode, self.notifier.mode)
+
+        if chat_id:
+            return f"Канал: {mode_name}. Привязан chat_id {chat_id}"
+        return f"Канал: {mode_name}. chat_id не привязан - используй код ниже"
 
     async def main(self, page: ft.Page):
         """
@@ -309,6 +327,188 @@ class ChatApp:
             page.pop_dialog()
             await clear_history(e)
 
+        async def show_notifications_dialog(e):
+            """
+            Диалог настройки Telegram-уведомлений (задание 1).
+
+            Два способа привязки chat_id:
+            - Код подтверждения: приложение показывает код и копирует его
+              в буфер, пользователь отправляет боту сообщение с кодом -
+              привязывается именно его аккаунт
+            - Ручной ввод chat_id (узнать: /start у бота @userinfobot)
+
+            Кнопка теста отправляет сообщение мгновенно, не дожидаясь
+            низкого баланса.
+            """
+            # Генерируем код привязки и копируем в буфер обмена
+            binding_code = generate_binding_code()
+
+            # Статус привязки внутри диалога
+            tg_status = ft.Text(
+                self._notifications_status_text(),
+                size=13,
+                color=ft.Colors.GREY_400,
+                text_align=ft.TextAlign.CENTER,
+            )
+
+            chat_id_field = ft.TextField(
+                **AppStyles.TG_CHAT_ID_FIELD,
+                value=self.notifier.get_chat_id() or "",
+            )
+
+            async def copy_code(ev):
+                # Копируем код в буфер обмена
+                try:
+                    await page.clipboard.set(binding_code)
+                    tg_status.value = f"Код {binding_code} скопирован в буфер обмена"
+                    tg_status.color = ft.Colors.GREEN_400
+                    page.update()
+                except Exception as err:
+                    self.logger.error(f"Clipboard copy failed: {err}")
+
+            async def verify_code(ev):
+                # Ищем код среди сообщений боту через getUpdates
+                tg_status.value = "Поиск кода среди сообщений боту..."
+                tg_status.color = ft.Colors.GREY_400
+                page.update()
+
+                loop = asyncio.get_event_loop()
+                found = await loop.run_in_executor(
+                    None, self.notifier.verify_binding_code, binding_code
+                )
+
+                if found:
+                    tg_status.value = (
+                        f"Привязано: chat_id {self.notifier.get_chat_id()}"
+                    )
+                    tg_status.color = ft.Colors.GREEN_400
+                else:
+                    tg_status.value = (
+                        "Код не найден. Отправьте боту сообщение "
+                        f"{binding_code} и повторите"
+                    )
+                    tg_status.color = ft.Colors.RED_400
+                page.update()
+
+            async def save_chat_id(ev):
+                # Ручное сохранение chat_id из поля
+                value = (chat_id_field.value or "").strip()
+                if not value.isdigit():
+                    tg_status.value = "chat_id должен быть числом"
+                    tg_status.color = ft.Colors.RED_400
+                    page.update()
+                    return
+
+                self.notifier.set_chat_id(value)
+                tg_status.value = f"chat_id {value} сохранен"
+                tg_status.color = ft.Colors.GREEN_400
+                page.update()
+
+            async def send_test(ev):
+                # Тестовая отправка без ожидания низкого баланса
+                tg_status.value = "Отправка теста..."
+                tg_status.color = ft.Colors.GREY_400
+                page.update()
+
+                loop = asyncio.get_event_loop()
+                sent = await loop.run_in_executor(
+                    None, self.notifier.send_message,
+                    "AI Chat: тестовое уведомление - связка работает"
+                )
+
+                if sent:
+                    tg_status.value = "Тест отправлен - проверь Telegram"
+                    tg_status.color = ft.Colors.GREEN_400
+                else:
+                    tg_status.value = (
+                        "Не отправлено. Сначала привяжи chat_id "
+                        "кодом или вручную"
+                    )
+                    tg_status.color = ft.Colors.RED_400
+                page.update()
+
+            dialog = ft.AlertDialog(
+                modal=True,
+                title=ft.Text("Telegram-уведомления"),
+                content=ft.Column(
+                    [
+                        tg_status,
+                        ft.Container(height=4),
+                        ft.Text(
+                            "Способ 1 - код подтверждения:",
+                            size=13, weight=ft.FontWeight.BOLD,
+                            color=ft.Colors.WHITE,
+                        ),
+                        ft.Text(
+                            binding_code,
+                            **AppStyles.TG_CODE_TEXT,
+                        ),
+                        ft.Text(
+                            "Скопируй код и отправь его сообщением "
+                            "твоему боту, затем нажми Проверить",
+                            size=12,
+                            color=ft.Colors.GREY_400,
+                            text_align=ft.TextAlign.CENTER,
+                        ),
+                        ft.Row(
+                            [
+                                ft.Button(
+                                    content="Скопировать",
+                                    icon=ft.Icons.CONTENT_COPY,
+                                    style=ft.ButtonStyle(
+                                        color=ft.Colors.WHITE,
+                                        bgcolor=ft.Colors.BLUE_700,
+                                        padding=10,
+                                    ),
+                                    expand=1,
+                                    height=42,
+                                    on_click=copy_code,
+                                ),
+                                ft.Button(
+                                    **AppStyles.TG_VERIFY_BUTTON,
+                                    on_click=verify_code,
+                                ),
+                            ],
+                            spacing=10,
+                        ),
+                        ft.Container(height=4),
+                        ft.Text(
+                            "Способ 2 - chat_id вручную (узнать: /start "
+                            "у @userinfobot):",
+                            size=13, weight=ft.FontWeight.BOLD,
+                            color=ft.Colors.WHITE,
+                        ),
+                        chat_id_field,
+                        ft.Button(
+                            **AppStyles.TG_SAVE_CHAT_BUTTON,
+                            on_click=save_chat_id,
+                        ),
+                        ft.Container(height=4),
+                        ft.Button(
+                            **AppStyles.TG_TEST_BUTTON,
+                            on_click=send_test,
+                        ),
+                    ],
+                    **AppStyles.TG_DIALOG_COLUMN,
+                ),
+                actions=[
+                    ft.TextButton("Закрыть", on_click=lambda ev: page.pop_dialog()),
+                ],
+            )
+
+            page.show_dialog(dialog)
+
+            # Копируем код в буфер сразу при открытии диалога
+            try:
+                await page.clipboard.set(binding_code)
+                tg_status.value = (
+                    f"Код {binding_code} уже скопирован в буфер обмена - "
+                    "отправь его боту и нажми Проверить"
+                )
+                page.update()
+            except Exception as err:
+                self.logger.error(f"Clipboard copy failed: {err}")
+
         async def save_dialog(e):
             """
             Сохранение истории диалога в JSON файл.
@@ -394,35 +594,51 @@ class ChatApp:
             **AppStyles.ANALYTICS_BUTTON    # Применение стилей
         )
 
-        # Создание layout компонентов
-
-        # Создание ряда кнопок управления
-        control_buttons = ft.Row(
-            controls=[                      # Размещение кнопок в ряд
-                save_button,
-                analytics_button,
-                clear_button
-            ],
-            **AppStyles.CONTROL_BUTTONS_ROW # Применение стилей к ряду
+        notifications_button = ft.IconButton(
+            icon=ft.Icons.NOTIFICATIONS,    # Иконка уведомлений
+            icon_color=ft.Colors.AMBER_400, # Янтарный цвет для акцента
+            tooltip="Настройки Telegram-уведомлений",
+            on_click=show_notifications_dialog  # Привязка диалога уведомлений
         )
 
-        # Создание строки ввода с кнопкой отправки
+        # Создание layout компонентов
+
+        # Строка 1: поле ввода + кнопка отправки
         input_row = ft.Row(
             controls=[                      # Размещение элементов ввода
                 self.message_input,
                 send_button
             ],
-            wrap=True,                      # Перенос на мобильных при узком экране
-            **AppStyles.INPUT_ROW           # Применение стилей к строке ввода
+            spacing=10,                     # Отступ между элементами
+        )
+
+        # Строка 2: Сохранить + Аналитика (равномерное растягивание)
+        buttons_row_1 = ft.Row(
+            controls=[
+                save_button,
+                analytics_button
+            ],
+            spacing=10,                     # Отступ между кнопками
+        )
+
+        # Строка 3: Очистить + кнопка Telegram-уведомлений
+        buttons_row_2 = ft.Row(
+            controls=[
+                clear_button,
+                notifications_button
+            ],
+            spacing=10,                     # Отступ между кнопками
         )
 
         # Создание колонки для элементов управления
         controls_column = ft.Column(
             controls=[                      # Размещение элементов управления
                 input_row,
-                control_buttons
+                buttons_row_1,
+                buttons_row_2
             ],
-            **AppStyles.CONTROLS_COLUMN     # Применение стилей к колонке
+            horizontal_alignment=ft.CrossAxisAlignment.STRETCH,  # Растягивание по ширине
+            spacing=10,                     # Отступ между строками
         )
 
         # Создание контейнера для баланса

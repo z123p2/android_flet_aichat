@@ -27,17 +27,36 @@ required.
 
 ## Setup before building
 
-The APK is built with the Telegram bot token. The token lives in GitHub
-Secrets and never appears in the source code:
+For Telegram notifications the app uses a bridge - a separate service with
+two endpoints (`/send` and `/updates`) that proxies requests to the
+Telegram Bot API. The bot token lives on the bridge side and never appears
+in the APK or the source code:
 
-1. Create a bot with [@BotFather](https://t.me/BotFather) via `/newbot` and
-   copy the token
-2. In the repo: Settings - Secrets and variables - Actions - New repository
-   secret
-3. Secret name: `TELEGRAM_BOT_TOKEN`, value: the bot token
-4. Run the workflow manually (Actions - Build APK - Run workflow) or push
+1. Deploy the bridge and set two environment variables on its side:
+   the bot token (`TELEGRAM_BOT_TOKEN`, from
+   [@BotFather](https://t.me/BotFather)) and a secret (`BRIDGE_SECRET`)
+   to reject foreign requests
+2. In the repo: Settings - Secrets and variables - Actions - New
+   repository secret - add two secrets:
+   - `TELEGRAM_BRIDGE_URL` - the bridge address
+   - `TELEGRAM_BRIDGE_SECRET` - the bridge `BRIDGE_SECRET` value
+3. Run the workflow manually (Actions - Build APK - Run workflow) or push
 
-To receive notifications, send `/start` to your bot.
+## Binding chat_id in the app
+
+After logging in, tap the bell icon next to the Clear button. Two ways
+to bind:
+
+- **Confirmation code (recommended):** the app shows a code and copies
+  it to the clipboard. Send the code as a message to your bot and tap
+  "Verify" - only the account that sent the code gets bound, a foreign
+  chat_id cannot bind
+- **Manual chat_id:** get your id via `/start` to `@userinfobot` and
+  type it in the field
+
+The "Send test" button checks the connection instantly. The low balance
+notification (below $0.50) is sent automatically, at most once per
+24 hours.
 
 Balance checks require an OpenRouter key. A PIN is generated for any valid
 key. With a zero or negative balance the login is allowed with a warning -
@@ -90,8 +109,10 @@ details - no internet, blocking, or unreachable proxy.
 - All paths (SQLite, logs, exports) are resolved from the app data directory,
   not the working directory - on Android the working directory is read-only
 - `os.startfile` is only called on Windows
-- The Telegram token is baked into the APK at build time from GitHub Secrets;
-  chat_id is detected automatically via the Telegram Bot API (`getUpdates`)
+- The bridge config (address and secret) is baked into the APK at build time
+  from GitHub Secrets; the bot token stays on the bridge side
+- Telegram requests go through the bridge - Bot API blocking does not
+  affect notifications
 
 ## Local build (optional)
 
@@ -102,7 +123,8 @@ flet build apk --project-name "AIChat" --org "com.example" \
 ```
 
 The Flet CLI installs JDK 17 and the Android SDK automatically on first run.
-The `TELEGRAM_BOT_TOKEN` environment variable must be set before building.
+The `TELEGRAM_BRIDGE_URL` and `TELEGRAM_BRIDGE_SECRET` environment variables
+must be set before building.
 
 ## License
 

@@ -48,31 +48,17 @@ class AppStyles:
         "shift_enter": True,                 # Включение отправки по Shift+Enter
     }
 
-    # Настройки кнопки отправки сообщения
-    SEND_BUTTON = {
-        "content": "Отправка",               # Текст на кнопке
-        "icon": ft.Icons.SEND,               # Иконка отправки сообщения
-        "style": ft.ButtonStyle(             # Стиль оформления кнопки
-            color=ft.Colors.WHITE,           # Цвет текста кнопки
-            bgcolor=ft.Colors.BLUE_700,      # Цвет фона кнопки
-            padding=10,                      # Внутренние отступы
-        ),
-        "tooltip": "Отправить сообщение",    # Всплывающая подсказка при наведении
-        "height": 40,                        # Высота кнопки
-        "width": 130,                        # Ширина кнопки
-    }
-
     # Настройки кнопки сохранения диалога
     SAVE_BUTTON = {
         "content": "Сохранить",              # Текст на кнопке
         "icon": ft.Icons.SAVE,               # Иконка сохранения
         "style": ft.ButtonStyle(             # Стиль оформления кнопки
             color=ft.Colors.WHITE,           # Цвет текста
-            bgcolor=ft.Colors.BLUE_700,      # Цвет фона
+            bgcolor=ft.Colors.DEEP_PURPLE_700,  # Темно-фиолетовый цвет фона
             padding=10,                      # Внутренние отступы
         ),
         "tooltip": "Сохранить диалог в файл", # Всплывающая подсказка
-        "width": 130,                        # Ширина кнопки
+        "expand": 1,                         # Растягивание на половину строки
         "height": 40,                        # Высота кнопки
     }
 
@@ -86,7 +72,7 @@ class AppStyles:
             padding=10,                      # Внутренние отступы
         ),
         "tooltip": "Очистить историю чата",   # Всплывающая подсказка
-        "width": 130,                        # Ширина кнопки
+        "expand": 1,                         # Растягивание на половину строки
         "height": 40,                        # Высота кнопки
     }
 
@@ -100,7 +86,21 @@ class AppStyles:
             padding=10,                      # Внутренние отступы
         ),
         "tooltip": "Показать аналитику",     # Всплывающая подсказка
-        "width": 130,                        # Ширина кнопки
+        "expand": 1,                         # Растягивание на половину строки
+        "height": 40,                        # Высота кнопки
+    }
+
+    # Настройки кнопки отправки сообщения
+    SEND_BUTTON = {
+        "content": "Отправить",              # Текст на кнопке
+        "icon": ft.Icons.SEND,               # Иконка отправки сообщения
+        "style": ft.ButtonStyle(             # Стиль оформления кнопки
+            color=ft.Colors.WHITE,           # Цвет текста кнопки
+            bgcolor=ft.Colors.BLUE_700,      # Цвет фона кнопки
+            padding=10,                      # Внутренние отступы
+        ),
+        "tooltip": "Отправить сообщение",    # Всплывающая подсказка при наведении
+        "expand": 3,                         # Основная ширина в строке с полем ввода
         "height": 40,                        # Высота кнопки
     }
 
@@ -278,6 +278,76 @@ class AppStyles:
         "size": 14,                          # Размер шрифта
         "color": ft.Colors.GREY_400,         # Серый цвет статуса
         "text_align": ft.TextAlign.CENTER,   # Центрирование текста
+    }
+
+    # Стили диалога Telegram-уведомлений
+
+    # Настройки колонки диалога уведомлений
+    TG_DIALOG_COLUMN = {
+        "spacing": 12,                       # Отступ между элементами
+        "width": 360,                        # Ширина диалога
+        "tight": True,                       # Плотное расположение
+    }
+
+    # Настройки текста кода привязки
+    TG_CODE_TEXT = {
+        "size": 32,                          # Крупный шрифт для кода
+        "weight": ft.FontWeight.BOLD,        # Жирное начертание
+        "color": ft.Colors.AMBER_400,        # Янтарный цвет для акцента
+        "text_align": ft.TextAlign.CENTER,   # Центрирование
+    }
+
+    # Настройки поля ручного ввода chat_id
+    TG_CHAT_ID_FIELD = {
+        "width": 340,                        # Ширина поля
+        "text_size": 14,                     # Размер шрифта
+        "color": ft.Colors.WHITE,            # Цвет текста
+        "bgcolor": ft.Colors.GREY_900,       # Цвет фона
+        "border_color": ft.Colors.GREY_700,  # Цвет границы
+        "cursor_color": ft.Colors.WHITE,     # Цвет курсора
+        "content_padding": 10,               # Внутренние отступы
+        "border_radius": 8,                  # Радиус скругления углов
+        "prefix_icon": ft.Icons.TAG,         # Иконка идентификатора
+        "hint_text": "chat_id из Telegram",  # Подсказка
+    }
+
+    # Настройки кнопки проверки кода привязки
+    TG_VERIFY_BUTTON = {
+        "content": "Проверить код",          # Текст на кнопке
+        "icon": ft.Icons.CHECK_CIRCLE,       # Иконка проверки
+        "style": ft.ButtonStyle(             # Стиль оформления кнопки
+            color=ft.Colors.WHITE,           # Цвет текста
+            bgcolor=ft.Colors.BLUE_700,      # Цвет фона
+            padding=10,                      # Внутренние отступы
+        ),
+        "expand": 1,                         # Растягивание в строке
+        "height": 42,                        # Высота кнопки
+    }
+
+    # Настройки кнопки отправки тестового уведомления
+    TG_TEST_BUTTON = {
+        "content": "Отправить тест",         # Текст на кнопке
+        "icon": ft.Icons.SEND,               # Иконка отправки
+        "style": ft.ButtonStyle(             # Стиль оформления кнопки
+            color=ft.Colors.WHITE,           # Цвет текста
+            bgcolor=ft.Colors.GREEN_700,     # Зеленый цвет фона
+            padding=10,                      # Внутренние отступы
+        ),
+        "expand": 1,                         # Растягивание в строке
+        "height": 42,                        # Высота кнопки
+    }
+
+    # Настройки кнопки сохранения chat_id вручную
+    TG_SAVE_CHAT_BUTTON = {
+        "content": "Сохранить",              # Текст на кнопке
+        "icon": ft.Icons.SAVE,               # Иконка сохранения
+        "style": ft.ButtonStyle(             # Стиль оформления кнопки
+            color=ft.Colors.WHITE,           # Цвет текста
+            bgcolor=ft.Colors.DEEP_PURPLE_700,  # Темно-фиолетовый цвет фона
+            padding=10,                      # Внутренние отступы
+        ),
+        "expand": 1,                         # Растягивание в строке
+        "height": 42,                        # Высота кнопки
     }
 
     @staticmethod

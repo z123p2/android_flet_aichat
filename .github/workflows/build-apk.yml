@@ -31,17 +31,20 @@ jobs:
           # flet-builder не существует на PyPI, flet-runtime устарел)
           pip install flet==0.86.5 flet-cli==0.86.5
 
-      # Токен Telegram-бота из GitHub Secrets вшивается в APK отдельным модулем
-      # и не попадает в исходный код репозитория
-      - name: Inject Telegram bot token
+      # Конфигурация моста для Telegram-уведомлений из GitHub Secrets
+      # вшивается в APK отдельным модулем. Токен бота хранится на стороне
+      # моста и не попадает в APK
+      - name: Inject Telegram bridge config
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_BRIDGE_URL: ${{ secrets.TELEGRAM_BRIDGE_URL }}
+          TELEGRAM_BRIDGE_SECRET: ${{ secrets.TELEGRAM_BRIDGE_SECRET }}
         run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
-            echo "TELEGRAM_BOT_TOKEN secret is not set - building without notifications"
-            printf 'TELEGRAM_BOT_TOKEN = ""\n' > src/telegram_token.py
+          if [ -z "$TELEGRAM_BRIDGE_URL" ] || [ -z "$TELEGRAM_BRIDGE_SECRET" ]; then
+            echo "TELEGRAM_BRIDGE_URL or TELEGRAM_BRIDGE_SECRET is not set - building without notifications"
+            printf 'BRIDGE_URL = ""\nBRIDGE_SECRET = ""\n' > src/tg_bridge.py
           else
-            printf 'TELEGRAM_BOT_TOKEN = "%s"\n' "$TELEGRAM_BOT_TOKEN" > src/telegram_token.py
+            printf 'BRIDGE_URL = "%s"\nBRIDGE_SECRET = "%s"\n' \
+              "$TELEGRAM_BRIDGE_URL" "$TELEGRAM_BRIDGE_SECRET" > src/tg_bridge.py
           fi
 
       # Сборка APK: Flet CLI сам установит JDK 17 и Android SDK при первом запуске

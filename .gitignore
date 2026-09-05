@@ -5,9 +5,10 @@ __pycache__/
 venv/
 .venv/
 
-# Секреты - токен вшивается при сборке из GitHub Secrets
+# Секреты - конфигурация уведомлений вшивается при сборке из GitHub Secrets
 .env
 src/telegram_token.py
+src/tg_bridge.py
 
 # Данные приложения
 *.db

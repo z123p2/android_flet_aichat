@@ -7,14 +7,10 @@
 
 import os
 import secrets
-import time
 
 import requests  # Библиотека для выполнения HTTP-запросов
 
 from utils.logger import AppLogger
-
-# Интервал анти-спама: не чаще одного уведомления в 24 часа
-NOTIFICATION_INTERVAL_SECONDS = 24 * 60 * 60
 
 # Таймаут запросов к Telegram
 REQUEST_TIMEOUT = 15
@@ -86,8 +82,7 @@ class TelegramNotifier:
       боту сгенерированный код, приложение находит его в getUpdates -
       чужой chat_id привязаться не может
     - Ручной ввод chat_id (альтернативный способ привязки)
-    - Отправку сообщений о низком балансе
-    - Анти-спам: не чаще одного уведомления в 24 часа
+    - Отправку сообщений о низком балансе при каждой авторизации
     """
 
     def __init__(self, cache):
@@ -345,10 +340,10 @@ class TelegramNotifier:
 
     def send_low_balance_notification(self, balance: str, threshold: float = 0.5) -> bool:
         """
-        Отправка уведомления о низком балансе с защитой от спама.
+        Отправка уведомления о низком балансе.
 
-        Уведомление отправляется не чаще одного раза в 24 часа -
-        время последней отправки хранится в базе данных.
+        Вызывается при каждой авторизации в приложении - баланс
+        проверяется при каждом запуске чата.
 
         Args:
             balance (str): Текущий баланс в виде строки, например '$0.12'
@@ -357,28 +352,9 @@ class TelegramNotifier:
         Returns:
             bool: True, если уведомление отправлено
         """
-        # Проверяем время последнего уведомления (анти-спам 24 часа)
-        last_sent = self.cache.get_setting("last_balance_notification")
-        if last_sent:
-            try:
-                elapsed = time.time() - float(last_sent)
-                if elapsed < NOTIFICATION_INTERVAL_SECONDS:
-                    self.logger.debug(
-                        "Low balance notification skipped - sent recently "
-                        f"({elapsed / 3600:.1f}h ago)"
-                    )
-                    return False
-            except ValueError:
-                # Некорректное значение - сбрасываем и отправляем заново
-                pass
-
         text = (
             f"AI Chat: низкий баланс OpenRouter {balance}. "
             f"Пополните баланс, чтобы продолжить работу с платными моделями"
         )
 
-        if self.send_message(text):
-            # Сохраняем время успешной отправки для анти-спама
-            self.cache.set_setting("last_balance_notification", str(time.time()))
-            return True
-        return False
+        return self.send_message(text)

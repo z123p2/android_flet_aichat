@@ -55,8 +55,7 @@ to bind:
   type it in the field
 
 The "Send test" button checks the connection instantly. The low balance
-notification (below $0.50) is sent automatically, at most once per
-24 hours.
+notification (below $0.50) is sent automatically on every app login.
 
 Balance checks require an OpenRouter key. A PIN is generated for any valid
 key. With a zero or negative balance the login is allowed with a warning -

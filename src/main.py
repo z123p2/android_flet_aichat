@@ -96,8 +96,7 @@ class ChatApp:
         При успешном получении баланса показывает его зеленым цветом,
         при ошибке - красным с текстом 'н/д' (не доступен).
 
-        Также проверяет низкий баланс и отправляет Telegram-уведомление
-        (не чаще одного раза в 24 часа).
+        Также проверяет низкий баланс и отправляет Telegram-уведомление.
         """
         try:
             balance = self.api_client.get_balance()         # Запрос баланса через API
@@ -117,7 +116,7 @@ class ChatApp:
         Проверка баланса на предмет низкого значения.
 
         При балансе ниже порога отправляет Telegram-уведомление
-        администратору с анти-спамом в 24 часа.
+        администратору - при каждой авторизации в приложении.
 
         Args:
             balance (str): Строка баланса в формате '$X.XX'
@@ -127,7 +126,7 @@ class ChatApp:
             numeric_balance = float(balance.replace("$", "").replace(",", "."))
 
             if numeric_balance <= LOW_BALANCE_THRESHOLD:
-                # Отправляем уведомление (анти-спам внутри метода)
+                # Отправляем уведомление о низком балансе
                 sent = self.notifier.send_low_balance_notification(
                     balance, LOW_BALANCE_THRESHOLD
                 )
@@ -453,15 +452,7 @@ class ChatApp:
                         ft.Row(
                             [
                                 ft.Button(
-                                    content="Скопировать",
-                                    icon=ft.Icons.CONTENT_COPY,
-                                    style=ft.ButtonStyle(
-                                        color=ft.Colors.WHITE,
-                                        bgcolor=ft.Colors.BLUE_700,
-                                        padding=10,
-                                    ),
-                                    expand=1,
-                                    height=42,
+                                    **AppStyles.TG_COPY_BUTTON,
                                     on_click=copy_code,
                                 ),
                                 ft.Button(
@@ -479,14 +470,24 @@ class ChatApp:
                             color=ft.Colors.WHITE,
                         ),
                         chat_id_field,
-                        ft.Button(
-                            **AppStyles.TG_SAVE_CHAT_BUTTON,
-                            on_click=save_chat_id,
+                        ft.Row(
+                            [
+                                ft.Button(
+                                    **AppStyles.TG_SAVE_CHAT_BUTTON,
+                                    on_click=save_chat_id,
+                                ),
+                            ],
+                            spacing=10,
                         ),
                         ft.Container(height=4),
-                        ft.Button(
-                            **AppStyles.TG_TEST_BUTTON,
-                            on_click=send_test,
+                        ft.Row(
+                            [
+                                ft.Button(
+                                    **AppStyles.TG_TEST_BUTTON,
+                                    on_click=send_test,
+                                ),
+                            ],
+                            spacing=10,
                         ),
                     ],
                     **AppStyles.TG_DIALOG_COLUMN,
@@ -621,13 +622,18 @@ class ChatApp:
             spacing=10,                     # Отступ между кнопками
         )
 
-        # Строка 3: Очистить + кнопка Telegram-уведомлений
+        # Строка 3: Очистить (равная ширина с кнопками выше) +
+        # невидимая зона с иконкой колокольчика для симметрии строк
         buttons_row_2 = ft.Row(
             controls=[
                 clear_button,
-                notifications_button
+                ft.Container(
+                    content=notifications_button,   # Иконка внутри зоны
+                    expand=1,                      # Такая же ширина, как кнопки
+                    alignment=ft.Alignment(0.0, 0.0),  # Иконка по центру зоны
+                )
             ],
-            spacing=10,                     # Отступ между кнопками
+            spacing=10,                     # Отступ между элементами
         )
 
         # Создание колонки для элементов управления
@@ -647,12 +653,18 @@ class ChatApp:
             **AppStyles.BALANCE_CONTAINER        # Применение стилей к контейнеру
         )
 
-        # Создание колонки выбора модели
+        # Создание колонки выбора модели:
+        # строка 1 - поиск (3/4) + баланс (1/4), строка 2 - селектор моделей
         model_selection = ft.Column(
             controls=[                            # Размещение элементов выбора модели
-                self.model_dropdown.search_field,
-                self.model_dropdown,
-                balance_container
+                ft.Row(
+                    controls=[
+                        self.model_dropdown.search_field,
+                        balance_container
+                    ],
+                    **AppStyles.SEARCH_BALANCE_ROW  # Стили строки поиска и баланса
+                ),
+                self.model_dropdown
             ],
             **AppStyles.MODEL_SELECTION_COLUMN   # Применение стилей к колонке
         )

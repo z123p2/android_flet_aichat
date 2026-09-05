@@ -34,7 +34,7 @@ class AppStyles:
 
     # Настройки поля ввода сообщений
     MESSAGE_INPUT = {
-        "width": 400,                        # Ширина поля ввода в пикселях
+        "expand": 3,                         # Основная ширина в строке ввода
         "height": 50,                        # Высота поля ввода в пикселях
         "multiline": False,                  # Запрет многострочного ввода
         "text_size": 16,                     # Размер шрифта текста
@@ -132,7 +132,8 @@ class AppStyles:
 
     # Настройки поля поиска модели
     MODEL_SEARCH_FIELD = {
-        "width": 400,                        # Ширина поля в пикселях
+        "expand": 3,                         # 3/4 ширины строки с балансом
+        "height": 45,                        # Высота поля
         "border_radius": 8,                  # Радиус скругления углов
         "bgcolor": ft.Colors.GREY_900,       # Цвет фона поля
         "border_color": ft.Colors.GREY_700,  # Цвет границы в обычном состоянии
@@ -145,12 +146,10 @@ class AppStyles:
             size=14,                         # Размер шрифта подсказки
         ),
         "prefix_icon": ft.Icons.SEARCH,      # Иконка поиска слева от поля
-        "height": 45,                        # Высота поля
     }
 
     # Настройки выпадающего списка выбора модели
     MODEL_DROPDOWN = {
-        "width": 400,                        # Ширина списка
         "height": 45,                        # Высота в закрытом состоянии
         "border_radius": 8,                  # Радиус скругления углов
         "bgcolor": ft.Colors.GREY_900,       # Цвет фона
@@ -162,20 +161,27 @@ class AppStyles:
 
     # Настройки колонки с элементами выбора модели
     MODEL_SELECTION_COLUMN = {
-        "spacing": 10,                                    # Отступ между элементами
-        "horizontal_alignment": ft.CrossAxisAlignment.CENTER,  # Выравнивание по центру
-        "width": 400,                                    # Ширина колонки
+        "spacing": 10,                       # Отступ между элементами
+    }
+
+    # Настройки строки поиска модели с балансом
+    SEARCH_BALANCE_ROW = {
+        "spacing": 10,                       # Отступ между элементами
     }
 
     # Настройки текста отображения баланса
     BALANCE_TEXT = {
-        "size": 16,                          # Размер шрифта
+        "size": 14,                          # Размер шрифта (компактно для узкого контейнера)
         "color": ft.Colors.GREEN_400,        # Зеленый цвет для позитивного восприятия
         "weight": ft.FontWeight.BOLD,        # Жирное начертание для акцента
+        "no_wrap": True,                     # Без переноса строки
+        "max_lines": 1,                      # Одна строка
     }
 
     # Настройки контейнера для отображения баланса
     BALANCE_CONTAINER = {
+        "expand": 1,                         # 1/4 ширины строки с поиском
+        "alignment": ft.Alignment(0.0, 0.0),  # Центрирование текста баланса
         "padding": 10,                       # Внутренние отступы
         "bgcolor": ft.Colors.GREY_900,       # Цвет фона
         "border_radius": 8,                  # Радиус скругления углов
@@ -299,7 +305,6 @@ class AppStyles:
 
     # Настройки поля ручного ввода chat_id
     TG_CHAT_ID_FIELD = {
-        "width": 340,                        # Ширина поля
         "text_size": 14,                     # Размер шрифта
         "color": ft.Colors.WHITE,            # Цвет текста
         "bgcolor": ft.Colors.GREY_900,       # Цвет фона
@@ -311,13 +316,26 @@ class AppStyles:
         "hint_text": "chat_id из Telegram",  # Подсказка
     }
 
+    # Настройки кнопки копирования кода привязки
+    TG_COPY_BUTTON = {
+        "content": "Скопировать",            # Текст на кнопке
+        "icon": ft.Icons.CONTENT_COPY,       # Иконка копирования
+        "style": ft.ButtonStyle(             # Стиль оформления кнопки
+            color=ft.Colors.WHITE,           # Цвет текста
+            bgcolor=ft.Colors.BLUE_700,      # Цвет фона
+            padding=10,                      # Внутренние отступы
+        ),
+        "expand": 1,                         # Растягивание в строке
+        "height": 42,                        # Высота кнопки
+    }
+
     # Настройки кнопки проверки кода привязки
     TG_VERIFY_BUTTON = {
         "content": "Проверить код",          # Текст на кнопке
         "icon": ft.Icons.CHECK_CIRCLE,       # Иконка проверки
         "style": ft.ButtonStyle(             # Стиль оформления кнопки
             color=ft.Colors.WHITE,           # Цвет текста
-            bgcolor=ft.Colors.BLUE_700,      # Цвет фона
+            bgcolor=ft.Colors.GREEN_700,     # Зеленый цвет фона
             padding=10,                      # Внутренние отступы
         ),
         "expand": 1,                         # Растягивание в строке
@@ -330,7 +348,7 @@ class AppStyles:
         "icon": ft.Icons.SEND,               # Иконка отправки
         "style": ft.ButtonStyle(             # Стиль оформления кнопки
             color=ft.Colors.WHITE,           # Цвет текста
-            bgcolor=ft.Colors.GREEN_700,     # Зеленый цвет фона
+            bgcolor=ft.Colors.BLUE_700,      # Цвет фона
             padding=10,                      # Внутренние отступы
         ),
         "expand": 1,                         # Растягивание в строке

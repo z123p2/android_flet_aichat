@@ -13,9 +13,19 @@ required.
   checks the balance and generates a PIN. The key and PIN hash are stored
   in SQLite
 - "Reset key" button on the login screen
-- Automatic Telegram notification on low balance (24-hour anti-spam)
+- Automatic Telegram notification on low balance on every app login
 - Chat history in SQLite, JSON export
 - Analytics: tokens, messages per minute, per-model stats
+
+## Screenshots
+
+| Screenshot | Description |
+|---|---|
+| ![First login](screenshots/01-login-pin.jpg) | First login: OpenRouter key verified, the app generated a PIN |
+| ![Chat](screenshots/02-chat-free-model.jpg) | Chat: balance, AI response, model search (`:free` model selected) |
+| ![Analytics](screenshots/03-analytics-dialog.jpg) | Analytics dialog: stats for the sent messages |
+| ![Telegram notifications](screenshots/04-telegram-binding.jpg) | Notifications dialog: bind chat_id by code or manually |
+| ![Bot in Telegram](screenshots/05-telegram-messages.jpg) | Telegram notifications from the bot |
 
 ## Installing the APK
 

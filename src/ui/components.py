@@ -345,7 +345,17 @@ class LoginView(ft.Container):
         detail = validation.get("error_detail", "")
 
         if error_type == "auth":
-            return "Ключ не найден или не валиден - проверь ключ на openrouter.ai"
+            # Различаем настоящую ошибку API (401 JSON) и блокировку
+            # Cloudflare (403 HTML) - по телу ответа в деталях
+            if "cloudflare" in detail.lower() or "<html" in detail.lower():
+                return (
+                    "openrouter.ai блокирует запросы с этого IP "
+                    f"(защита Cloudflare). Детали: {detail}"
+                )
+            return (
+                "Ключ не найден или не валиден - проверь ключ на openrouter.ai. "
+                f"Детали: {detail}"
+            )
         if error_type == "network":
             return (
                 "Нет соединения с openrouter.ai. Причины: нет интернета, "

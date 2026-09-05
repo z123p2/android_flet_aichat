@@ -273,7 +273,8 @@ class OpenRouterClient:
                 timeout=self.REQUEST_TIMEOUT
             )
 
-            # Код 401/403 означает невалидный ключ
+            # Код 401/403: невалидный ключ ИЛИ блокировка Cloudflare -
+            # тело ответа в error_detail позволяет их различить в UI
             if response.status_code in (401, 403):
                 self.logger.warning(
                     f"OpenRouter key validation failed: HTTP {response.status_code}"
@@ -283,7 +284,7 @@ class OpenRouterClient:
                     "balance_positive": False,
                     "balance": 0.0,
                     "error_type": "auth",
-                    "error_detail": f"HTTP {response.status_code}: {response.text[:120]}"
+                    "error_detail": f"HTTP {response.status_code}: {response.text[:160]}"
                 }
 
             # Прочие коды ошибки (5xx, 429 и т.д.) - проблема на стороне API

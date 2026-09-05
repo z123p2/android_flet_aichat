@@ -184,6 +184,7 @@ class LoginView(ft.Container):
 
         # Поле прокси (опционально): если openrouter.ai заблокирован
         # на устройстве или в регионе - запросы идут через прокси
+        # В flet 0.86 подсказка под полем задается параметром helper (не helper_text)
         saved_proxy = self.cache.get_setting("proxy_url") or ""
         self.proxy_field = ft.TextField(
             label="Прокси (опционально)",
@@ -198,7 +199,7 @@ class LoginView(ft.Container):
             content_padding=10,
             border_radius=8,
             prefix_icon=ft.Icons.VPN_KEY,
-            helper_text="Если openrouter.ai недоступен напрямую",
+            helper="Если openrouter.ai недоступен напрямую",
         )
 
         # Текст сообщения об ошибке

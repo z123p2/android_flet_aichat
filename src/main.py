@@ -585,9 +585,18 @@ class ChatApp:
             **AppStyles.CLEAR_BUTTON        # Применение стилей
         )
 
-        send_button = ft.Button(
+        # Кнопка отправки: IconButton центрирует иконку по горизонтали
+        send_button = ft.IconButton(
+            icon=ft.Icons.SEND,             # Иконка треугольника по центру кнопки
+            tooltip="Отправить сообщение",  # Всплывающая подсказка
+            style=ft.ButtonStyle(           # Стиль оформления кнопки
+                color=ft.Colors.WHITE,
+                bgcolor=ft.Colors.BLUE_700,
+                padding=10,
+            ),
+            expand=1,                       # 0.5/4 ширины в строке с полем ввода
+            height=50,                      # Высота кнопки на уровне поля ввода
             on_click=send_message_click,    # Привязка функции отправки
-            **AppStyles.SEND_BUTTON         # Применение стилей
         )
 
         analytics_button = ft.Button(
@@ -680,8 +689,10 @@ class ChatApp:
         )
 
         # Добавление основной колонки через SafeArea: автоматически
-        # отступает от системных иконок и выреза экрана на мобильных
-        page.add(ft.SafeArea(content=self.main_column))
+        # отступает от системных иконок и выреза экрана на мобильных;
+        # expand=True - SafeArea занимает весь экран, иначе элементы
+        # сжимаются по вертикали и поле ввода уезжает за нижний край
+        page.add(ft.SafeArea(content=self.main_column, expand=True))
 
         # Обновляем баланс и проверяем низкий баланс (задание 1)
         self.update_balance()

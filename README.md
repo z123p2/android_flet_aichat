@@ -44,6 +44,22 @@ a positive balance - this is a stated requirement of the assignment. Without
 a balance the chat still works on free models, but the app shows a message
 about the negative balance.
 
+## Proxy
+
+If openrouter.ai is unreachable from the device directly (ISP/region
+blocking, emulator network) - the login screen has an optional "Proxy"
+field:
+
+- Format: `http://host:port`, `http://user:pass@host:port` or
+  `socks5://host:port`
+- The proxy applies to all OpenRouter requests (key check, chat, balance)
+- The value is stored in SQLite and pre-filled on next logins,
+  including PIN login
+
+Key validation errors are distinguished by cause: "Key not found or
+invalid" (API responded 401/403) or "No connection to openrouter.ai" with
+details - no internet, blocking, or unreachable proxy.
+
 ## Project structure
 
 ```

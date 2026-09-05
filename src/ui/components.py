@@ -182,6 +182,25 @@ class LoginView(ft.Container):
             on_submit=self.handle_submit
         )
 
+        # Поле прокси (опционально): если openrouter.ai заблокирован
+        # на устройстве или в регионе - запросы идут через прокси
+        saved_proxy = self.cache.get_setting("proxy_url") or ""
+        self.proxy_field = ft.TextField(
+            label="Прокси (опционально)",
+            hint_text="http://host:port или socks5://host:port",
+            value=saved_proxy,
+            width=340,
+            text_size=13,
+            color=ft.Colors.WHITE,
+            bgcolor=ft.Colors.GREY_900,
+            border_color=ft.Colors.GREY_700,
+            cursor_color=ft.Colors.WHITE,
+            content_padding=10,
+            border_radius=8,
+            prefix_icon=ft.Icons.VPN_KEY,
+            helper_text="Если openrouter.ai недоступен напрямую",
+        )
+
         # Текст сообщения об ошибке
         self.error_text = ft.Text(
             **AppStyles.LOGIN_ERROR_TEXT,
@@ -230,6 +249,7 @@ class LoginView(ft.Container):
                 ),
                 self.key_field,
                 self.pin_field,
+                self.proxy_field,
                 self.error_text,
                 self.status_text,
                 self.login_button,
@@ -301,9 +321,37 @@ class LoginView(ft.Container):
         # Проверка PIN против сохраненного хэша
         if self.cache.check_pin(pin):
             api_key, _ = self.cache.get_auth()
-            await self.on_login(api_key, e.page)
+            # Прокси из поля применяется и при входе по PIN
+            proxy_url = (self.proxy_field.value or "").strip()
+            await self.on_login(api_key, proxy_url, e.page)
         else:
             self.show_error("Неверный PIN")
+
+    def _get_error_message(self, validation: dict) -> str:
+        """
+        Формирование точного сообщения об ошибке валидации ключа.
+
+        По error_type из validate_key определяем причину: невалидный ключ,
+        нет соединения (блокировка/нет интернета/прокси) или ошибка API.
+
+        Args:
+            validation (dict): Результат validate_key()
+
+        Returns:
+            str: Понятное сообщение для пользователя
+        """
+        error_type = validation.get("error_type", "http")
+        detail = validation.get("error_detail", "")
+
+        if error_type == "auth":
+            return "Ключ не найден или не валиден - проверь ключ на openrouter.ai"
+        if error_type == "network":
+            return (
+                "Нет соединения с openrouter.ai. Причины: нет интернета, "
+                "сайт заблокирован (нужен прокси) или прокси недоступен. "
+                f"Детали: {detail}"
+            )
+        return f"Ошибка OpenRouter API. Детали: {detail}"
 
     async def login_with_key(self, e):
         """
@@ -320,10 +368,19 @@ class LoginView(ft.Container):
         """
         api_key = (self.key_field.value or "").strip()
         pin = (self.pin_field.value or "").strip()
+        proxy_url = (self.proxy_field.value or "").strip()
 
         # Проверка наличия ключа
         if not api_key:
             self.show_error("Введите ключ авторизации")
+            return
+
+        # Проверка формата прокси, если задан
+        if proxy_url and "://" not in proxy_url:
+            self.show_error(
+                "Прокси задан неверно. Формат: http://host:port "
+                "или socks5://host:port"
+            )
             return
 
         # Показываем статус проверки
@@ -335,8 +392,13 @@ class LoginView(ft.Container):
         from api.openrouter import OpenRouterClient
 
         loop = asyncio.get_event_loop()
+
+        def create_client():
+            # Создаем клиент с прокси: run_in_executor не принимает kwargs
+            return OpenRouterClient(api_key=api_key, proxy_url=proxy_url or None)
+
         try:
-            client = await loop.run_in_executor(None, OpenRouterClient, api_key)
+            client = await loop.run_in_executor(None, create_client)
             validation = await loop.run_in_executor(None, client.validate_key)
         except ValueError:
             # Некорректный формат ключа - показываем ошибку и восстанавливаем кнопку
@@ -344,10 +406,10 @@ class LoginView(ft.Container):
             self.show_error("Ключ не найден или не валиден")
             return
 
-        # Ключ невалиден
+        # Ключ невалиден - показываем точную причину
         if not validation["valid"]:
             self.login_button.disabled = False
-            self.show_error("Ключ не найден или не валиден")
+            self.show_error(self._get_error_message(validation))
             return
 
         # Ключ валиден, но баланс неположительный - PIN не выдаем
@@ -360,6 +422,9 @@ class LoginView(ft.Container):
             )
             return
 
+        # Сохраняем прокси для следующих входов по PIN
+        self.cache.set_setting("proxy_url", proxy_url)
+
         # Генерируем PIN и сохраняем пару ключ + хэш PIN в базу
         pin = self.cache.generate_pin()
         self.cache.save_auth(api_key, pin)
@@ -369,7 +434,7 @@ class LoginView(ft.Container):
         await asyncio.sleep(3)
 
         # Выполняем вход
-        await self.on_login(api_key, e.page)
+        await self.on_login(api_key, proxy_url, e.page)
 
     def reset_key(self, e):
         """

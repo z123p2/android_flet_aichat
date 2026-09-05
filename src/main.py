@@ -33,7 +33,7 @@ class ChatApp:
     Управляет всей логикой работы приложения, включая UI и взаимодействие с API.
     """
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, proxy_url: str = None):
         """
         Инициализация основных компонентов приложения:
         - API клиент для связи с языковой моделью
@@ -45,9 +45,11 @@ class ChatApp:
 
         Args:
             api_key (str): Ключ авторизации openRouter.ai, полученный при входе
+            proxy_url (str): Адрес прокси из окна входа (опционально)
         """
         # Инициализация основных компонентов
-        self.api_client = OpenRouterClient(api_key)  # Создание клиента для работы с AI API
+        # Клиент создается с прокси: openrouter.ai может быть заблокирован
+        self.api_client = OpenRouterClient(api_key, proxy_url=proxy_url or None)
         self.cache = ChatCache()                   # Инициализация системы кэширования
         self.logger = AppLogger()                  # Инициализация системы логирования
         self.analytics = Analytics(self.cache)     # Инициализация системы аналитики с передачей кэша
@@ -470,16 +472,17 @@ def main(page: ft.Page):
     # Кэш нужен до создания приложения - для проверки PIN
     cache = ChatCache()
 
-    async def handle_login(api_key: str, page: ft.Page):
+    async def handle_login(api_key: str, proxy_url: str, page: ft.Page):
         """
         Колбэк успешного входа: заменяет окно входа на чат.
 
         Args:
             api_key (str): Ключ авторизации openRouter.ai
+            proxy_url (str): Адрес прокси из окна входа (пустая строка - напрямую)
             page (ft.Page): Объект страницы приложения
         """
-        # Создаем приложение чата с проверенным ключом
-        app = ChatApp(api_key)
+        # Создаем приложение чата с проверенным ключом и прокси
+        app = ChatApp(api_key, proxy_url=proxy_url)
 
         # Заменяем содержимое страницы на чат
         page.controls.clear()
